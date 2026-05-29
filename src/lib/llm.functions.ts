@@ -18,10 +18,11 @@ const Input = z.object({
 });
 
 const FALLBACK_MODELS = [
+  "google/gemini-2.5-flash", // Extremely cheap, fast, no datacenter IP block
+  "meta-llama/llama-3.1-8b-instruct", // Paid tier, very cheap
   "meta-llama/llama-3.1-8b-instruct:free",
   "mistralai/mistral-7b-instruct:free",
-  "google/gemma-2-9b-it:free",
-  "qwen/qwen-2-7b-instruct:free",
+  "google/gemma-2-9b-it:free"
 ];
 
 /**
