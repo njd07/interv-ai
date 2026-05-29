@@ -2,7 +2,7 @@
 
 An intelligent mock interview platform designed to help freshers prepare for technical placements across Data Structures & Algorithms (DSA), Spring Boot, System Design, and Low-Level Design (LLD).
 
-## 🏆 Problem Statement (Hackathon T3)
+## 🏆 Problem Statement (T3)
 
 > **Build an AI-powered mock interview tool that gives real-time feedback on answers for freshers preparing for placements.**
 
@@ -73,12 +73,12 @@ Go to our deployed website: **[https://intervai-1ghs.onrender.com](https://inter
 
 ---
 
-### Option B: Run Locally (Recommended for Hackathon)
+### Option B: Run Locally (Recommended)
 Running locally allows the app to connect to your local **Ollama** instance, providing incredibly fast, private, and free AI inference.
 
 #### Prerequisites
 1. **Node.js** (v18+ recommended)
-2. **Ollama** installed locally ([Download](https://ollama.com/))
+2. **Ollama** installed locally and pull any model as your wish ([Download](https://ollama.com/))
 3. **Google Chrome / Microsoft Edge** (Required for Voice Input — Firefox does not support Web Speech API)
 
 #### 1. Start the Local AI (Ollama)
@@ -111,3 +111,6 @@ npm install
 npm run dev
 ```
 Open **`http://localhost:8080`** in Chrome or Edge, login with `admin` / `admin123`, and start your interview!
+
+
+*Thank You!*
