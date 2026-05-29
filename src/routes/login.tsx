@@ -1,9 +1,10 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Terminal, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/store/session";
 import { GlowButton } from "@/components/GlowButton";
+import { signUp, signIn } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login — IntervAI" }] }),
@@ -21,22 +22,29 @@ function LoginPage() {
 
   if (session) return <Navigate to="/dashboard" />;
 
+  const signUpFn = useServerFn(signUp);
+  const signInFn = useServerFn(signIn);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
-      // Mock Authentication for Hackathon
-      // Allows anyone to register and login instantly without Supabase
-      const user = {
-        id: "usr_" + Math.random().toString(36).substring(2, 9),
-        email: email.trim().toLowerCase(),
-      };
-      localStorage.setItem("intervai:mock_session", JSON.stringify(user));
+      const fn = mode === "signin" ? signInFn : signUpFn;
+      const res = await fn({ data: { email, password } });
+      
+      if (!res.ok) {
+        setErr(res.error);
+        setBusy(false);
+        return;
+      }
+
+      localStorage.setItem("intervai:mock_session", JSON.stringify(res.user));
       // Force a reload to let the SessionProvider pick up the new state cleanly
       window.location.href = "/dashboard";
     } catch (e) {
       setErr((e as Error).message);
-    } finally { setBusy(false); }
+      setBusy(false);
+    }
   };
 
   return (
