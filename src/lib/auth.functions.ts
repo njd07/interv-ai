@@ -11,7 +11,7 @@ export type User = {
 
 // Sign Up Schema
 const AuthSchema = z.object({
-  email: z.string().email(),
+  email: z.string().min(3),
   password: z.string().min(6),
 });
 
