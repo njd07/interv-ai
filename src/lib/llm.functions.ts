@@ -81,9 +81,7 @@ async function tryOllama(
   }
 }
 
-export const callOpenRouter = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => Input.parse(d))
-  .handler(async ({ data }) => {
+export async function callOpenRouter({ data }: { data: z.infer<typeof Input> }) {
     // ─── Ollama branch ───────────────────────────────────────────
     if (data.useOllama) {
       const url = (data.ollamaUrl || "http://localhost:11434").replace(/\/+$/, "");
@@ -163,4 +161,4 @@ export const callOpenRouter = createServerFn({ method: "POST" })
       message: "Cloud AI gateway rate limit reached. Please try again in a moment or switch to Local Ollama in Settings.",
       detail: lastErr,
     };
-  });
+}
