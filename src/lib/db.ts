@@ -21,4 +21,20 @@ db.exec(`
   );
 `);
 
+// Auto-seed admin account for hackathon demos (so it survives Render free-tier restarts)
+import bcrypt from "bcryptjs";
+try {
+  const adminExists = db.prepare("SELECT id FROM users WHERE email = ?").get("admin");
+  if (!adminExists) {
+    const hash = bcrypt.hashSync("admin123", 10);
+    db.prepare("INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)").run(
+      "admin_fixed",
+      "admin",
+      hash
+    );
+  }
+} catch (e) {
+  console.error("Failed to seed admin:", e);
+}
+
 export { db };
