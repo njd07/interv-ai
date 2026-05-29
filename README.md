@@ -63,35 +63,51 @@ graph TD
 
 ---
 
-## 🚀 Setup & Local Execution
+## 🚀 Setup & Execution
 
-### Prerequisites
+You can experience IntervAI in two ways: through our live cloud deployment or by running it locally for maximum privacy and zero latency.
+
+### Option A: Run Online (Live Demo)
+Go to our deployed website: **[https://intervai-1ghs.onrender.com](https://intervai-1ghs.onrender.com)**
+*(Note: The online version uses cloud AI models via OpenRouter. You can input your own API keys in the Settings menu).*
+
+---
+
+### Option B: Run Locally (Recommended for Hackathon)
+Running locally allows the app to connect to your local **Ollama** instance, providing incredibly fast, private, and free AI inference.
+
+#### Prerequisites
 1. **Node.js** (v18+ recommended)
 2. **Ollama** installed locally ([Download](https://ollama.com/))
 3. **Google Chrome / Microsoft Edge** (Required for Voice Input — Firefox does not support Web Speech API)
 
-### 1. Start the Local AI (Ollama)
-Pull the recommended model and start the server:
+#### 1. Start the Local AI (Ollama)
+By default, the application expects the `mistral:7b-instruct-q3_K_M` model. 
+Pull the model and start the server:
 ```bash
 ollama run mistral:7b-instruct-q3_K_M
 ```
-> Ensure no background systemd service is blocking port 11434. If it is, run:
-> `sudo systemctl stop ollama && ollama serve`
+> **Using a different model?** 
+> If you want to use a different model (like `llama3`), simply run `ollama run llama3`, and then update the Model Name in the **Settings Menu (gear icon)** on the IntervAI dashboard!
 
-### 2. Configure Environment
+*(Troubleshooting: Ensure no background service is blocking port 11434. If it is, run `sudo systemctl stop ollama && ollama serve`)*
+
+#### 2. Configure Environment
 Create a `.env` file in the root directory:
 ```env
-# Optional: For cloud fallback
+# Optional: For cloud fallback if Ollama is turned off
 OPENROUTER_API_KEY="your-openrouter-key"
 
-# Optional: For high-quality voice (requires credits)
+# Optional: For high-quality ElevenLabs voice (otherwise falls back to browser TTS)
 ELEVENLABS_API_KEY="your-elevenlabs-key"
 ```
-*(Note: You can also input your ElevenLabs key directly in the app's Settings Modal!)*
 
-### 3. Install & Run
+#### 3. Install & Run
 ```bash
+# Install dependencies
 npm install
+
+# Start the development server
 npm run dev
 ```
-Open `http://localhost:8080` in Chrome/Edge.
+Open **`http://localhost:8080`** in Chrome or Edge, login with `admin` / `admin123`, and start your interview!
