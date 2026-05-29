@@ -79,7 +79,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             <div className="font-mono text-sm space-y-3 text-muted-foreground">
               <p><span className="text-[var(--cyan)]">IntervAI v1.0</span> — AI-powered mock interview platform</p>
               <p>4 domains · Voice + text interviews · MCQ quizzes with free-form judging · ElevenLabs TTS</p>
-              <p>Built for hackathon. LLM via OpenRouter with multi-model failover.</p>
+              <p>Built for Freshers preparing for interviews. LLM via OpenRouter with multi-model failover.</p>
             </div>
           )}
         </div>
