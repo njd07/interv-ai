@@ -32,12 +32,12 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           {tab === "engine" && (
             <>
               <div>
-                <label className="font-mono text-xs uppercase text-muted-foreground">Your OpenRouter API Key (optional)</label>
+                <label className="font-mono text-xs uppercase text-muted-foreground">Your Claude / OpenRouter API Key (required for online)</label>
                 <input type="password" value={settings.userOpenRouterKey}
                   onChange={(e) => setSettings({ userOpenRouterKey: e.target.value })}
                   placeholder="sk-or-v1-..."
                   className="w-full mt-1 px-3 py-2 bg-input rounded-md font-mono text-sm border border-border focus:outline-none focus:border-[var(--cyan)]" />
-                <p className="text-xs text-muted-foreground mt-1">If empty, uses the built-in server key.</p>
+                <p className="text-xs text-muted-foreground mt-1">Required to use the cloud AI models if running online.</p>
               </div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={settings.useOllama}

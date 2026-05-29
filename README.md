@@ -69,7 +69,7 @@ You can experience IntervAI in two ways: through our live cloud deployment or by
 
 ### Option A: Run Online (Live Demo)
 Go to our deployed website: **[https://intervai-1ghs.onrender.com](https://intervai-1ghs.onrender.com)**
-*(Note: The online version uses cloud AI models via OpenRouter. You can input your own API keys in the Settings menu).*
+*(Important: To use the online version, you must click the **Settings Menu (gear icon)** and input your own **Claude API / OpenRouter API Key** to power the AI models. If you don't have an API key, please use Option B to run it locally for free!)*
 
 ---
 
