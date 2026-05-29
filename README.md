@@ -83,14 +83,14 @@ Running locally allows the app to connect to your local **Ollama** instance, pro
 
 #### 1. Start the Local AI (Ollama)
 By default, the application expects the `mistral:7b-instruct-q3_K_M` model. 
-Pull the model and start the server:
+Start the Ollama background service so the app can connect to it:
 ```bash
-ollama run mistral:7b-instruct-q3_K_M
+ollama serve
 ```
 > **Using a different model?** 
-> If you want to use a different model (like `llama3`), simply run `ollama run llama3`, and then update the Model Name in the **Settings Menu (gear icon)** on the IntervAI dashboard!
+> If you have a different model downloaded (like `llama3`), the application will still work! Just open the **Settings Menu (gear icon)** on the IntervAI dashboard and change the Model Name.
 
-*(Troubleshooting: Ensure no background service is blocking port 11434. If it is, run `sudo systemctl stop ollama && ollama serve`)*
+*(Troubleshooting: If `ollama serve` says "address already in use", it means Ollama is already running in the background and you are good to go!)*
 
 #### 2. Configure Environment
 Create a `.env` file in the root directory:
