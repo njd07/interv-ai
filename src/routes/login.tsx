@@ -25,12 +25,15 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
-      const fn = mode === "signin"
-        ? supabase.auth.signInWithPassword({ email, password })
-        : supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/` } });
-      const { error } = await fn;
-      if (error) throw error;
-      navigate({ to: "/dashboard" });
+      // Mock Authentication for Hackathon
+      // Allows anyone to register and login instantly without Supabase
+      const user = {
+        id: "usr_" + Math.random().toString(36).substring(2, 9),
+        email: email.trim().toLowerCase(),
+      };
+      localStorage.setItem("intervai:mock_session", JSON.stringify(user));
+      // Force a reload to let the SessionProvider pick up the new state cleanly
+      window.location.href = "/dashboard";
     } catch (e) {
       setErr((e as Error).message);
     } finally { setBusy(false); }

@@ -46,14 +46,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-    return () => sub.subscription.unsubscribe();
+    const raw = typeof window !== "undefined" ? localStorage.getItem("intervai:mock_session") : null;
+    if (raw) {
+      try {
+        const user = JSON.parse(raw);
+        setSession({ user } as unknown as Session);
+      } catch {}
+    }
+    setLoading(false);
   }, []);
 
   const setSettings = (patch: Partial<Settings>) => {
@@ -65,8 +65,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    try { localStorage.removeItem("intervai:admin"); } catch {}
-    await supabase.auth.signOut();
+    try { localStorage.removeItem("intervai:mock_session"); } catch {}
     setSession(null);
   };
 
