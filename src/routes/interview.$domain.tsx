@@ -7,7 +7,6 @@ import { GlassCard } from "@/components/GlassCard";
 import { GlowButton } from "@/components/GlowButton";
 import { DOMAIN_META, type Domain } from "@/lib/knowledge";
 import { nextInterviewerTurn } from "@/lib/evaluate.functions";
-import { synthesizeSpeech } from "@/lib/tts.functions";
 
 export const Route = createFileRoute("/interview/$domain")({
   head: () => ({ meta: [{ title: "Interview — IntervAI" }] }),
@@ -22,7 +21,7 @@ function InterviewPage() {
   const d = domain as Domain;
   const navigate = useNavigate();
   const nextTurn = useServerFn(nextInterviewerTurn);
-  const tts = useServerFn(synthesizeSpeech);
+  // TTS is called directly from the browser — no server hop needed, simpler and more reliable
 
   const [transcript, setTranscript] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -53,25 +52,48 @@ function InterviewPage() {
 
   async function speak(text: string) {
     if (muted) return;
-    try {
-      setSpeaking(true);
-      const key = settings.userElevenLabsKey?.trim() || "";
-      console.log(`[TTS] speaking, key present=${!!key}, key prefix=${key.slice(0, 8)}`);
-      const r = await tts({ data: { text, voiceId: settings.voiceId, userElevenLabsKey: key } });
-      if (r.ok) {
-        const audio = new Audio(`data:audio/mpeg;base64,${r.audioBase64}`);
-        audioRef.current = audio;
-        audio.onended = () => setSpeaking(false);
-        audio.onerror = () => fallbackTTS(text);
-        await audio.play().catch(() => fallbackTTS(text));
-      } else {
-        console.warn("[TTS] ElevenLabs failed:", r.error, (r as any).detail ?? "");
-        fallbackTTS(text);
+    setSpeaking(true);
+
+    // Call ElevenLabs directly from the browser — bypasses server function entirely.
+    // The key comes from localStorage via settings, no serialization issues.
+    const key = settings.userElevenLabsKey?.trim() || "";
+    console.log(`[TTS] key present=${!!key}, prefix=${key.slice(0,8)||"(none)"}`);
+
+    if (key) {
+      try {
+        const voiceId = (settings.voiceId || "EXAVITQu4vr4xnSDxMaL").trim();
+        const res = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+          {
+            method: "POST",
+            headers: { "xi-api-key": key, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text,
+              model_id: "eleven_turbo_v2_5",
+              voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+            }),
+          }
+        );
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+          audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); fallbackTTS(text); };
+          await audio.play();
+          return;
+        } else {
+          const err = await res.text();
+          console.warn(`[TTS] ElevenLabs HTTP ${res.status}:`, err.slice(0, 200));
+        }
+      } catch (e) {
+        console.error("[TTS] ElevenLabs fetch error:", e);
       }
-    } catch (e) {
-      console.error("[TTS] speak() threw:", e);
-      fallbackTTS(text);
     }
+
+    // Fallback to browser TTS if no key or ElevenLabs failed
+    fallbackTTS(text);
   }
 
   function fallbackTTS(text: string) {
