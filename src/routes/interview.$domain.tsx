@@ -30,7 +30,8 @@ function InterviewPage() {
   const [inputMode, setInputMode] = useState<"voice" | "text">("text");
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [muted, setMuted] = useState(!settings.voice);
+  // Derive muted from settings.voice so toggling voice in Settings takes effect immediately
+  const muted = !settings.voice;
   const [questionIndex, setQuestionIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +54,9 @@ function InterviewPage() {
     if (muted) return;
     try {
       setSpeaking(true);
-      const r = await tts({ data: { text, voiceId: settings.voiceId, userElevenLabsKey: settings.userElevenLabsKey } });
+      const key = settings.userElevenLabsKey?.trim() || "";
+      console.log(`[TTS] speaking, key present=${!!key}, key prefix=${key.slice(0, 8)}`);
+      const r = await tts({ data: { text, voiceId: settings.voiceId, userElevenLabsKey: key } });
       if (r.ok) {
         const audio = new Audio(`data:audio/mpeg;base64,${r.audioBase64}`);
         audioRef.current = audio;
@@ -184,7 +187,7 @@ function InterviewPage() {
           {meta.title} · Q{Math.min(questionIndex, 5)}/5
         </div>
         <div className="flex gap-2">
-          <GlowButton variant="ghost" size="sm" onClick={() => { setMuted(!muted); if (!muted) stopSpeaking(); }}>
+          <GlowButton variant="ghost" size="sm" onClick={() => { setSettings({ voice: muted }); if (!muted) stopSpeaking(); }}>
             {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </GlowButton>
           {speaking && (
