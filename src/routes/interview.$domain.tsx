@@ -74,17 +74,22 @@ function InterviewPage() {
           }
         );
         if (res.ok) {
-          const arrayBuf = await res.arrayBuffer();
-          // Use AudioContext to play — immune to Chrome autoplay policy after user gesture
-          const audioCtx = new AudioContext();
-          const decoded = await audioCtx.decodeAudioData(arrayBuf);
-          const source = audioCtx.createBufferSource();
-          source.buffer = decoded;
-          source.connect(audioCtx.destination);
-          source.onended = () => { setSpeaking(false); audioCtx.close(); };
-          source.start(0);
-          audioRef.current = { pause: () => { source.stop(); audioCtx.close(); } } as any;
-          return;
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+          audio.onerror = (e) => {
+            console.error("[TTS] Audio element error:", e);
+            setSpeaking(false); URL.revokeObjectURL(url); fallbackTTS(text);
+          };
+          try {
+            await audio.play();
+            return;
+          } catch (playErr) {
+            console.error("[TTS] audio.play() failed:", playErr);
+            URL.revokeObjectURL(url);
+          }
         } else {
           const err = await res.text();
           console.warn(`[TTS] ElevenLabs HTTP ${res.status}:`, err.slice(0, 200));
