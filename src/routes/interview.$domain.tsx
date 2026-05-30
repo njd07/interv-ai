@@ -61,9 +61,11 @@ function InterviewPage() {
         audio.onerror = () => fallbackTTS(text);
         await audio.play().catch(() => fallbackTTS(text));
       } else {
+        console.warn("[TTS] ElevenLabs failed:", r.error, (r as any).detail ?? "");
         fallbackTTS(text);
       }
-    } catch {
+    } catch (e) {
+      console.error("[TTS] speak() threw:", e);
       fallbackTTS(text);
     }
   }
