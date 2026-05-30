@@ -34,6 +34,7 @@ function InterviewPage() {
   const muted = !settings.voice;
   const [questionIndex, setQuestionIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [started, setStarted] = useState(false); // requires user click for autoplay policy
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -42,13 +43,13 @@ function InterviewPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [transcript, thinking]);
 
-  // Start interview
+  // Start interview — only after user clicks (required for browser autoplay policy)
   useEffect(() => {
-    if (loading || !session || startedRef.current) return;
+    if (!started || loading || !session || startedRef.current) return;
     startedRef.current = true;
     void ask([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, session]);
+  }, [started, loading, session]);
 
   async function speak(text: string) {
     if (muted) return;
@@ -176,6 +177,21 @@ function InterviewPage() {
   if (!session) return <Navigate to="/login" />;
   const meta = DOMAIN_META[d];
   if (!meta) return <Navigate to="/dashboard" />;
+
+  // Click-to-start screen: required so browser grants autoplay permission for ElevenLabs audio
+  if (!started) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
+        <div className="glass-strong rounded-2xl p-10 max-w-md w-full text-center space-y-6">
+          <div className="font-mono text-[var(--cyan)] text-2xl">{meta.title}</div>
+          <p className="font-mono text-sm text-muted-foreground">You will be asked 5 questions. Answer verbally or by typing. The AI interviewer will speak each question aloud.</p>
+          <GlowButton className="w-full text-lg py-4" onClick={() => setStarted(true)}>
+            Begin Interview
+          </GlowButton>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col">
