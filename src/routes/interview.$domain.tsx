@@ -53,17 +53,17 @@ function InterviewPage() {
   async function speak(text: string) {
     if (muted) return;
     setSpeaking(true);
+    // Always cancel any queued browser TTS first
+    window.speechSynthesis?.cancel();
 
-    // Cancel any pending browser TTS first so extensions can't stack on top of ElevenLabs
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-
-    // Priority: 1) User's own key from Settings, 2) Global key baked in at build time from Render env var
-    const key = settings.userElevenLabsKey?.trim() || (typeof __ELEVENLABS_API_KEY__ !== "undefined" ? __ELEVENLABS_API_KEY__ : "") || "";
-    console.log(`[TTS] using key prefix=${key.slice(0,8)||"(none)"}`);
+    const key = settings.userElevenLabsKey?.trim()
+      || (typeof __ELEVENLABS_API_KEY__ !== "undefined" ? __ELEVENLABS_API_KEY__ : "")
+      || "";
 
     if (key) {
+      // ── ElevenLabs path ──────────────────────────────────────
+      // When a key exists we NEVER fall back to browser TTS.
+      // Any failure just silently stops the speaking indicator.
       try {
         const voiceId = (settings.voiceId || "EXAVITQu4vr4xnSDxMaL").trim();
         const res = await fetch(
@@ -83,29 +83,22 @@ function InterviewPage() {
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
           audioRef.current = audio;
+          // Never call fallbackTTS here — just stop the indicator on any error/end
           audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-          audio.onerror = (e) => {
-            console.error("[TTS] Audio element error:", e);
-            setSpeaking(false); URL.revokeObjectURL(url); fallbackTTS(text);
-          };
-          try {
-            await audio.play();
-            audio.onerror = null; // ← clear so a late Chrome onerror doesn't double-trigger browser TTS
-            return;
-          } catch (playErr) {
-            console.error("[TTS] audio.play() failed:", playErr);
-            URL.revokeObjectURL(url);
-          }
-        } else {
-          const err = await res.text();
-          console.warn(`[TTS] ElevenLabs HTTP ${res.status}:`, err.slice(0, 200));
+          audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+          await audio.play().catch(() => { setSpeaking(false); URL.revokeObjectURL(url); });
+          return;
         }
+        console.warn("[TTS] ElevenLabs non-OK:", res.status);
       } catch (e) {
-        console.error("[TTS] ElevenLabs fetch error:", e);
+        console.error("[TTS] ElevenLabs error:", e);
       }
+      // ElevenLabs failed — stop speaking indicator only, no browser TTS
+      setSpeaking(false);
+      return;
     }
 
-    // Fallback to browser TTS if no key or ElevenLabs failed
+    // ── No key — use browser TTS as the only option ───────────
     fallbackTTS(text);
   }
 
