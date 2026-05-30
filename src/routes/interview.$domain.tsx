@@ -54,10 +54,9 @@ function InterviewPage() {
     if (muted) return;
     setSpeaking(true);
 
-    // Call ElevenLabs directly from the browser — bypasses server function entirely.
-    // The key comes from localStorage via settings, no serialization issues.
-    const key = settings.userElevenLabsKey?.trim() || "";
-    console.log(`[TTS] key present=${!!key}, prefix=${key.slice(0,8)||"(none)"}`);
+    // Priority: 1) User's own key from Settings, 2) Global key baked in at build time from Render env var
+    const key = settings.userElevenLabsKey?.trim() || (typeof __ELEVENLABS_API_KEY__ !== "undefined" ? __ELEVENLABS_API_KEY__ : "") || "";
+    console.log(`[TTS] using key prefix=${key.slice(0,8)||"(none)"}`);
 
     if (key) {
       try {
@@ -75,13 +74,16 @@ function InterviewPage() {
           }
         );
         if (res.ok) {
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audioRef.current = audio;
-          audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-          audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); fallbackTTS(text); };
-          await audio.play();
+          const arrayBuf = await res.arrayBuffer();
+          // Use AudioContext to play — immune to Chrome autoplay policy after user gesture
+          const audioCtx = new AudioContext();
+          const decoded = await audioCtx.decodeAudioData(arrayBuf);
+          const source = audioCtx.createBufferSource();
+          source.buffer = decoded;
+          source.connect(audioCtx.destination);
+          source.onended = () => { setSpeaking(false); audioCtx.close(); };
+          source.start(0);
+          audioRef.current = { pause: () => { source.stop(); audioCtx.close(); } } as any;
           return;
         } else {
           const err = await res.text();
@@ -207,7 +209,11 @@ function InterviewPage() {
         <div className="glass-strong rounded-2xl p-10 max-w-md w-full text-center space-y-6">
           <div className="font-mono text-[var(--cyan)] text-2xl">{meta.title}</div>
           <p className="font-mono text-sm text-muted-foreground">You will be asked 5 questions. Answer verbally or by typing. The AI interviewer will speak each question aloud.</p>
-          <GlowButton className="w-full text-lg py-4" onClick={() => setStarted(true)}>
+          <GlowButton className="w-full text-lg py-4" onClick={async () => {
+            // Unlock AudioContext in Chrome — must happen inside a click handler
+            try { const ctx = new AudioContext(); await ctx.resume(); ctx.close(); } catch {}
+            setStarted(true);
+          }}>
             Begin Interview
           </GlowButton>
         </div>

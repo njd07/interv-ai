@@ -9,8 +9,14 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   nitro: { preset: "node-server" },
   tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    define: {
+      // Expose the server-side ELEVENLABS_API_KEY to the browser bundle at build time.
+      // On Render: set ELEVENLABS_API_KEY in the Environment Variables dashboard.
+      // This means every user gets TTS without entering their own key.
+      __ELEVENLABS_API_KEY__: JSON.stringify(process.env.ELEVENLABS_API_KEY || ""),
+    },
   },
 });
