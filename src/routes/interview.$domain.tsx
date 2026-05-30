@@ -85,6 +85,7 @@ function InterviewPage() {
           };
           try {
             await audio.play();
+            audio.onerror = null; // ← clear so a late Chrome onerror doesn't double-trigger browser TTS
             return;
           } catch (playErr) {
             console.error("[TTS] audio.play() failed:", playErr);
