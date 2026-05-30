@@ -62,8 +62,6 @@ function InterviewPage() {
 
     if (key) {
       // ── ElevenLabs path ──────────────────────────────────────
-      // When a key exists we NEVER fall back to browser TTS.
-      // Any failure just silently stops the speaking indicator.
       try {
         const voiceId = (settings.voiceId || "EXAVITQu4vr4xnSDxMaL").trim();
         const res = await fetch(
@@ -83,19 +81,23 @@ function InterviewPage() {
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
           audioRef.current = audio;
-          // Never call fallbackTTS here — just stop the indicator on any error/end
           audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+          // onerror after play() already started → just stop silently (prevents double-voice)
           audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-          await audio.play().catch(() => { setSpeaking(false); URL.revokeObjectURL(url); });
-          return;
+          try {
+            await audio.play(); // play() resolved → ElevenLabs audio is running
+            return; // success, do NOT fall through to browser TTS
+          } catch {
+            // play() rejected → audio never started → safe to fall through to browser TTS
+            URL.revokeObjectURL(url);
+          }
+        } else {
+          console.warn("[TTS] ElevenLabs non-OK:", res.status);
         }
-        console.warn("[TTS] ElevenLabs non-OK:", res.status);
       } catch (e) {
         console.error("[TTS] ElevenLabs error:", e);
       }
-      // ElevenLabs failed — stop speaking indicator only, no browser TTS
-      setSpeaking(false);
-      return;
+      // ElevenLabs failed before audio started → fall back to browser TTS
     }
 
     // ── No key — use browser TTS as the only option ───────────
