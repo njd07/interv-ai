@@ -54,6 +54,11 @@ function InterviewPage() {
     if (muted) return;
     setSpeaking(true);
 
+    // Cancel any pending browser TTS first so extensions can't stack on top of ElevenLabs
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
     // Priority: 1) User's own key from Settings, 2) Global key baked in at build time from Render env var
     const key = settings.userElevenLabsKey?.trim() || (typeof __ELEVENLABS_API_KEY__ !== "undefined" ? __ELEVENLABS_API_KEY__ : "") || "";
     console.log(`[TTS] using key prefix=${key.slice(0,8)||"(none)"}`);
